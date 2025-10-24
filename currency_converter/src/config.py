@@ -1,13 +1,17 @@
+from typing import Literal
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    POSTGRES_USER: str = Field(description="DB user name")
-    POSTGRES_PASSWORD: str = Field(description="DB password")
-    POSTGRES_DB: str = Field(description="DB database name")
+    """Class containing all environment variables and methods for database url generation"""
 
-    APP_ENVIRONMENT: str = Field(description="Environment name")
+    DB_USER: str = Field(description="DB user name")
+    DB_PASS: str = Field(description="DB password")
+    DB_NAME: str = Field(description="DB database name")
+
+    APP_ENVIRONMENT: Literal["DOCKER", "LOCAL"] = "LOCAL"
 
     @property
     def database_url(self):
