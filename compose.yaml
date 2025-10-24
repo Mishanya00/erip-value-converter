@@ -1,0 +1,35 @@
+services:
+  backend:
+    build: ./src
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - APP_ENVIRONMENT=DOCKER
+    volumes:
+      - ./src:/app
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:17
+    env_file:
+      - .env
+    ports:
+      - "${DB_HOST_PORT:-5432}:5432"
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - converter_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  converter_postgres_data:
