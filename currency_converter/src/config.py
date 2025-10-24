@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     DB_USER: str = Field(description="DB user name")
     DB_PASS: str = Field(description="DB password")
     DB_NAME: str = Field(description="DB database name")
+    DB_HOST_PORT: int = Field()
 
     APP_ENVIRONMENT: Literal["DOCKER", "LOCAL"] = "LOCAL"
 

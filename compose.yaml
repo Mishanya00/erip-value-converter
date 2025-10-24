@@ -1,5 +1,5 @@
 services:
-  backend:
+  converter:
     build: ./currency_converter
     ports:
       - "8000:8000"
