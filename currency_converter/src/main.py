@@ -1,6 +1,10 @@
 from fastapi import FastAPI
 
+from src.converter.api.router import converter_router
+
 app = FastAPI()
+
+app.include_router(converter_router, prefix="/converter", tags=["converter"])
 
 
 @app.get("/")
