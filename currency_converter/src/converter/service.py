@@ -1,4 +1,6 @@
 import logging
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from tenacity import RetryError
 
@@ -10,6 +12,7 @@ from src.converter.exceptions import ExternalAPIRequestError
 
 class CurrencyConverterService:
     def __init__(self, exchange_rate_repo: ExchangeRateRepository):
+        self.timezone = ZoneInfo(settings.TIMEZONE)
         self.logger = logging.getLogger(__name__)
         self.exchange_rate_repo = exchange_rate_repo
 
@@ -23,4 +26,13 @@ class CurrencyConverterService:
         return response.json()
 
     async def get_today_currency_rates(self):
-        pass
+        date = datetime.now(self.timezone).date()
+        rates = await self.exchange_rate_repo.get_rates_by_cur_date(date)
+        if not rates:
+            async with CurrencyRateClient(base_url=settings.EXTERNAL_API_URL) as aclient:
+                try:
+                    response = await aclient.get_rates()
+                except RetryError as e:
+                    self.logger.exception(f"Failed to get currency rates: {e}")
+                    raise ExternalAPIRequestError
+        return response.json()
