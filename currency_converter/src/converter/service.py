@@ -9,7 +9,7 @@ from src.converter.repositories import ExchangeRateRepository
 from src.converter.exceptions import ExternalAPIRequestError
 from src.config import settings
 from src.client.currency_rate_client import CurrencyRateClient
-from src.client.schemas import ExternalAPIRateSchema
+from src.client.schemas import ExternalAPIExchangeRateSchema
 
 
 class CurrencyConverterService:
@@ -18,10 +18,10 @@ class CurrencyConverterService:
         self.logger = logging.getLogger(__name__)
         self.exchange_rate_repo = exchange_rate_repo
 
-    async def get_currency_rates_request(self, period: int = 0) -> list[ExternalAPIRateSchema]:
+    async def get_currency_rates_request(self, period: int = 0) -> list[ExternalAPIExchangeRateSchema]:
         async with CurrencyRateClient(base_url=settings.EXTERNAL_API_URL) as aclient:
             try:
-                currency_rates: list[ExternalAPIRateSchema] = await aclient.get_rates(period)
+                currency_rates: list[ExternalAPIExchangeRateSchema] = await aclient.get_rates(period)
             except RetryError as e:
                 self.logger.exception(f"Failed to get currency rates: {e}")
                 raise ExternalAPIRequestError
@@ -33,7 +33,7 @@ class CurrencyConverterService:
         if not rates:
             async with CurrencyRateClient(base_url=settings.EXTERNAL_API_URL) as aclient:
                 try:
-                    currency_rates: list[ExternalAPIRateSchema] = await aclient.get_rates()
+                    currency_rates: list[ExternalAPIExchangeRateSchema] = await aclient.get_rates()
 
                     rates_to_create: list[ExchangeRateBaseSchema] = [
                         ExchangeRateBaseSchema(
@@ -47,7 +47,7 @@ class CurrencyConverterService:
                         for currency_rate in currency_rates
                     ]
 
-                    # TODO insert rates to db
+                    await self.exchange_rate_repo.insert_many_rates(rates_to_create)
 
                 except RetryError as e:
                     self.logger.exception(f"Failed to get currency rates: {e}")

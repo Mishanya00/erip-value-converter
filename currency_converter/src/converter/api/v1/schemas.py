@@ -1,6 +1,7 @@
+import uuid
 from decimal import Decimal
 from typing import Annotated
-from datetime import date
+from datetime import date, datetime
 
 from pydantic import BaseModel, Field, ConfigDict
 
@@ -14,3 +15,9 @@ class ExchangeRateBaseSchema(BaseModel):
     cur_date: Annotated[date, Field(description="Date of this exchange rate")]
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class ExchangeRateReadSchema(ExchangeRateBaseSchema):
+    id: Annotated[uuid.UUID, Field(description="Exchange rate id")]
+    created_at: Annotated[datetime, Field(description="Exchange rate creation date")]
+    modified_at: Annotated[datetime, Field(description="Exchange rate modification date")]

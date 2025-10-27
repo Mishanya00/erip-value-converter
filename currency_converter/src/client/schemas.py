@@ -5,7 +5,7 @@ from typing import Annotated
 from pydantic import BaseModel, Field
 
 
-class ExternalAPIRateSchema(BaseModel):
+class ExternalAPIExchangeRateSchema(BaseModel):
     id: Annotated[int, Field(alias='Cur_ID')]
     timestamp: Annotated[datetime, Field(alias='Date')]
     abbreviation: Annotated[str, Field(alias='Cur_Abbreviation')]
