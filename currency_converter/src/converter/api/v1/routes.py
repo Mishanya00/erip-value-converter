@@ -1,6 +1,9 @@
-from fastapi import APIRouter
+from typing import Annotated
 
-from src.converter.service import get_currency_rates
+from fastapi import APIRouter, Depends
+
+from src.converter.service import CurrencyConverterService
+from src.converter.dependencies import get_currency_converter_service
 
 
 converter_router_v1 = APIRouter()
@@ -12,5 +15,8 @@ async def root():
 
 
 @converter_router_v1.get("/rates")
-async def get_rates(period: int = 0):
-    return await get_currency_rates(period)
+async def get_rates(
+        currency_converter_service: Annotated[CurrencyConverterService, Depends(get_currency_converter_service)],
+        period: int = 0,
+):
+    return await currency_converter_service.get_currency_rates_request(period)

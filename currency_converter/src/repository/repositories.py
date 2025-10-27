@@ -13,9 +13,9 @@ class ExchangeRateRepository(BaseRepository):
         )
         return result.scalars().all()
 
-    async def is_present_by_date(self, date: date):
+    async def is_present_by_date(self, cur_date: date):
         result = await self.session.execute(
-            select(ExchangeRate).filter(ExchangeRate.cur_date == date)
+            select(ExchangeRate).filter(ExchangeRate.cur_date == cur_date)
         )
         if result.scalars().first():
             return True
