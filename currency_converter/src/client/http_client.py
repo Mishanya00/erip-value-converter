@@ -1,6 +1,7 @@
 from typing import Any
 
 import httpx
+from tenacity import retry, stop_after_attempt, wait_fixed
 
 
 class BaseHTTPClient:
@@ -38,6 +39,7 @@ class BaseHTTPClient:
             )
         return self._client
 
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(3))
     async def get(
         self,
         endpoint: str,
