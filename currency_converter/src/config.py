@@ -12,9 +12,11 @@ class Settings(BaseSettings):
     DB_NAME: str = Field(description="DB database name")
     DB_HOST_PORT: int = Field()
 
+    APP_ENVIRONMENT: Literal["DOCKER", "LOCAL"] = "LOCAL"
+
     EXTERNAL_API_URL: str = Field(description="Base URL for API calls")
 
-    APP_ENVIRONMENT: Literal["DOCKER", "LOCAL"] = "LOCAL"
+    TIMEZONE: str = Field(description="Timezone used by the application")
 
     @property
     def database_url(self):

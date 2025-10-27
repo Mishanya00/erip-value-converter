@@ -6,16 +6,19 @@ from decimal import Decimal
 from sqlalchemy import text, UUID, Integer, DateTime, Date, Numeric, func
 from sqlalchemy.orm import Mapped, mapped_column
 
+from src.config import settings
 from src.custom_types import Str3, Str128
 from src.repository.database import Base
 
+
+timezone_default = text("TIMEZONE(:tz, now())").bindparams(tz=settings.TIMEZONE)
 
 created_at_type = Annotated[
     datetime,
     mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        server_default=text("TIMEZONE('utc', now())"),
+        server_default=timezone_default,
     ),
 ]
 
@@ -23,8 +26,8 @@ modified_at_type = Annotated[
     datetime,
     mapped_column(
         DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
+        server_default=timezone_default,
+        onupdate=timezone_default,
         nullable=False,
     ),
 ]
