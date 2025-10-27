@@ -1,0 +1,22 @@
+from datetime import date
+
+from sqlalchemy import select
+
+from src.repository.database import BaseRepository
+from src.converter.models import ExchangeRate
+
+
+class ExchangeRateRepository(BaseRepository):
+    async def get_rates_by_cur_date(self, cur_date: date):
+        result = await self.session.execute(
+            select(ExchangeRate).filter(ExchangeRate.cur_date == cur_date)
+        )
+        return result.scalars().all()
+
+    async def is_present_by_date(self, date: date):
+        result = await self.session.execute(
+            select(ExchangeRate).filter(ExchangeRate.cur_date == date)
+        )
+        if result.scalars().first():
+            return True
+        return False
