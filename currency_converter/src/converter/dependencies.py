@@ -4,7 +4,7 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.repository.dependencies import get_session
-from src.repository.repositories import ExchangeRateRepository
+from src.converter.repositories import ExchangeRateRepository
 from src.converter.service import CurrencyConverterService
 
 

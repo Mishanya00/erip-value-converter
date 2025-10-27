@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 class ExternalAPIRateSchema(BaseModel):
     id: Annotated[int, Field(alias='Cur_ID')]
-    date: Annotated[datetime, Field(alias='Date')]
+    timestamp: Annotated[datetime, Field(alias='Date')]
     abbreviation: Annotated[str, Field(alias='Cur_Abbreviation')]
     scale: Annotated[int, Field(alias='Cur_Scale')]
     name: Annotated[str, Field(alias='Cur_Name')]

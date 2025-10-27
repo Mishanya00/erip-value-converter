@@ -20,3 +20,9 @@ async def get_rates(
         period: int = 0,
 ):
     return await currency_converter_service.get_currency_rates_request(period)
+
+@converter_router_v1.get("/rates/today")
+async def get_today_rates(
+        currency_converter_service: Annotated[CurrencyConverterService, Depends(get_currency_converter_service)],
+):
+    return await currency_converter_service.get_today_currency_rates()

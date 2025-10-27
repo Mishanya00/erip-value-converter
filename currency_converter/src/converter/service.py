@@ -4,11 +4,12 @@ from zoneinfo import ZoneInfo
 
 from tenacity import RetryError
 
-from src.repository.repositories import ExchangeRateRepository
+from src.converter.api.v1.schemas import ExchangeRateBaseSchema
+from src.converter.repositories import ExchangeRateRepository
+from src.converter.exceptions import ExternalAPIRequestError
 from src.config import settings
 from src.client.currency_rate_client import CurrencyRateClient
 from src.client.schemas import ExternalAPIRateSchema
-from src.converter.exceptions import ExternalAPIRequestError
 
 
 class CurrencyConverterService:
@@ -20,11 +21,11 @@ class CurrencyConverterService:
     async def get_currency_rates_request(self, period: int = 0) -> list[ExternalAPIRateSchema]:
         async with CurrencyRateClient(base_url=settings.EXTERNAL_API_URL) as aclient:
             try:
-                response = await aclient.get_rates(period)
+                currency_rates: list[ExternalAPIRateSchema] = await aclient.get_rates(period)
             except RetryError as e:
                 self.logger.exception(f"Failed to get currency rates: {e}")
                 raise ExternalAPIRequestError
-        return response
+        return currency_rates
 
     async def get_today_currency_rates(self):
         date = datetime.now(self.timezone).date()
@@ -32,8 +33,23 @@ class CurrencyConverterService:
         if not rates:
             async with CurrencyRateClient(base_url=settings.EXTERNAL_API_URL) as aclient:
                 try:
-                    response = await aclient.get_rates()
+                    currency_rates: list[ExternalAPIRateSchema] = await aclient.get_rates()
+
+                    rates_to_create: list[ExchangeRateBaseSchema] = [
+                        ExchangeRateBaseSchema(
+                            cur_id=currency_rate.id,
+                            cur_abbreviation=currency_rate.abbreviation,
+                            cur_scale=currency_rate.scale,
+                            cur_name=currency_rate.name,
+                            cur_official_rate=currency_rate.rate,
+                            cur_date=currency_rate.timestamp.date()
+                        )
+                        for currency_rate in currency_rates
+                    ]
+
+                    # TODO insert rates to db
+
                 except RetryError as e:
                     self.logger.exception(f"Failed to get currency rates: {e}")
                     raise ExternalAPIRequestError
-        return response.json()
+        return rates_to_create
