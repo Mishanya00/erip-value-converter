@@ -8,7 +8,8 @@ services:
     environment:
       - APP_ENVIRONMENT=DOCKER
     volumes:
-      - ./currency_converter:/app
+      - ./currency_converter/src:/app/src
+      - ./currency_converter/migrations:/app/migrations
     depends_on:
       db:
         condition: service_healthy

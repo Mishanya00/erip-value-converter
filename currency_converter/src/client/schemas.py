@@ -1,9 +1,11 @@
+from datetime import datetime
+from decimal import Decimal
 from typing import Annotated
 
 from pydantic import BaseModel, Field
 
 
-class CurrencyRateSchema(BaseModel):
+class ExternalAPIRateSchema(BaseModel):
     id: Annotated[int, Field(alias='Cur_ID')]
     date: Annotated[datetime, Field(alias='Date')]
     abbreviation: Annotated[str, Field(alias='Cur_Abbreviation')]
