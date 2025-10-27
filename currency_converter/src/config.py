@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     DB_NAME: str = Field(description="DB database name")
     DB_HOST_PORT: int = Field()
 
+    EXTERNAL_API_URL: str = Field(description="Base URL for API calls")
+
     APP_ENVIRONMENT: Literal["DOCKER", "LOCAL"] = "LOCAL"
 
     @property
