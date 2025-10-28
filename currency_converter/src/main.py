@@ -4,20 +4,40 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
+from src.scheduler import fetch_and_store_rates_job, MINSK_TZ, FETCH_TIME, CUTOFF_TIME
 from src.converter.api.router import converter_router
 from src.converter.exceptions import BaseAppException
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # await AsyncORM.create_tables() # Uncomment to use instead of migrations
+    scheduler = AsyncIOScheduler(timezone=MINSK_TZ)
+
+    scheduler.add_job(
+        fetch_and_store_rates_job,
+        trigger='cron',
+        # minute='*',
+        hour=FETCH_TIME.hour,
+        minute=FETCH_TIME.minute,
+        id="daily_national_bank_api_data_fetch",
+        replace_existing=True,
+    )
+
+    scheduler.add_job(
+        fetch_and_store_rates_job,
+        trigger='date',
+        id="startup_national_bank_api_data_fetch",
+    )
+
+    scheduler.start()
 
     yield
 
-    # actions after
+    scheduler.shutdown()
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 app.include_router(converter_router, prefix="/converter", tags=["converter"])
 
 
