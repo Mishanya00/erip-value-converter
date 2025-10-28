@@ -47,9 +47,7 @@ class CurrencyConverterService:
                         for currency_rate in currency_rates
                     ]
 
-                    await self.exchange_rate_repo.insert_many_rates(rates_to_create)
-
-                    rates = await self.exchange_rate_repo.select_rates_by_date(date)
+                    rates = await self.exchange_rate_repo.insert_many_rates(rates_to_create)
                 except RetryError as e:
                     self.logger.exception(f"Failed to get currency rates: {e}")
                     raise ExternalAPIRequestError

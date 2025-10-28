@@ -25,11 +25,16 @@ class ExchangeRateRepository(BaseRepository):
 
     async def insert_many_rates(self, rates: List[ExchangeRateBaseSchema]):
         if not rates:
-            return
+            return []
 
         values_to_insert = [rate.model_dump() for rate in rates]
 
-        statement = insert(ExchangeRate).values(values_to_insert)
+        statement = insert(ExchangeRate).values(values_to_insert).returning(ExchangeRate)
 
-        await self.session.execute(statement)
+        result = await self.session.execute(statement)
+
+        inserted_rows = list(result.scalars().all())
+
         await self.session.commit()
+
+        return inserted_rows

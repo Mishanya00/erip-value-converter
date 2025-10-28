@@ -12,7 +12,7 @@ engine = create_async_engine(
     echo=True,
 )
 
-session_maker = async_sessionmaker(engine)
+session_maker = async_sessionmaker(engine, expire_on_commit=False)
 
 
 class Base(DeclarativeBase):
