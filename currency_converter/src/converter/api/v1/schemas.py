@@ -21,3 +21,15 @@ class ExchangeRateReadSchema(ExchangeRateBaseSchema):
     id: Annotated[uuid.UUID, Field(description="Exchange rate id")]
     created_at: Annotated[datetime, Field(description="Exchange rate creation date")]
     modified_at: Annotated[datetime, Field(description="Exchange rate modification date")]
+
+
+class ExchangeMoneyRequestSchema(BaseModel):
+    base_cur_abbreviation: Annotated[str, Field(description="Three letter currency code")]
+    quote_cur_abbreviation: Annotated[str, Field(description="Three letter currency code")]
+    base_cur_amount: Annotated[Decimal, Field(description="Base currency amount")]
+
+
+class ExchangeMoneyResponseSchema(BaseModel):
+    quote_cur_amount: Annotated[Decimal, Field(description="Quote currency amount")]
+    exchange_rate: Annotated[Decimal, Field(description="Exchange rate")]
+    transaction_uuid: Annotated[uuid.UUID, Field(description="Transaction UUID")]
