@@ -29,7 +29,7 @@ class CurrencyConverterService:
 
     async def get_today_currency_rates(self):
         date = datetime.now(self.timezone).date()
-        rates = await self.exchange_rate_repo.get_rates_by_cur_date(date)
+        rates = await self.exchange_rate_repo.select_rates_by_cur_date(date)
         if not rates:
             async with CurrencyRateClient(base_url=settings.EXTERNAL_API_URL) as aclient:
                 try:
@@ -49,7 +49,8 @@ class CurrencyConverterService:
 
                     await self.exchange_rate_repo.insert_many_rates(rates_to_create)
 
+                    rates = await self.exchange_rate_repo.select_rates_by_date(date)
                 except RetryError as e:
                     self.logger.exception(f"Failed to get currency rates: {e}")
                     raise ExternalAPIRequestError
-        return rates_to_create
+        return rates
