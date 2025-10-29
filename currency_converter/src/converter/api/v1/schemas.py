@@ -5,6 +5,8 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, Field, ConfigDict
 
+from src.custom_types import ExchangeStatus
+
 
 class ExchangeRateBaseSchema(BaseModel):
     cur_id: Annotated[int, Field(description="Numeric currency code")]
@@ -42,3 +44,33 @@ class ExchangeMoneyResponseSchema(BaseModel):
     target_cur_amount: Annotated[Decimal, Field(description="Quote currency amount")]
     exchange_rate: Annotated[Decimal, Field(description="Exchange rate")]
     transaction_uuid: Annotated[uuid.UUID, Field(description="Transaction UUID")]
+
+
+class ExchangeBaseSchema(BaseModel):
+    source_cur_abbreviation: Annotated[
+        str, Field(description="Three letter source currency code")
+    ]
+    target_cur_abbreviation: Annotated[
+        str, Field(description="Three letter target currency code")
+    ]
+    source_amount: Annotated[Decimal, Field(description="Quote currency amount")]
+    target_amount: Annotated[Decimal, Field(description="Quote currency amount")]
+    rate: Annotated[
+        Decimal,
+        Field(
+            description="Amount of target currency that can be bought by 1 source currency unit"
+        ),
+    ]
+    status: Annotated[
+        ExchangeStatus, Field(description="Exchange transaction status")
+    ] = ExchangeStatus.PENDING
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ExchangeBaseReadSchema(BaseModel):
+    id: Annotated[uuid.UUID, Field(description="Exchange id")]
+    created_at: Annotated[datetime, Field(description="Exchange rate creation date")]
+    modified_at: Annotated[
+        datetime, Field(description="Exchange rate modification date")
+    ]
