@@ -3,7 +3,7 @@ from typing import Annotated
 from datetime import datetime, date
 from decimal import Decimal
 
-from sqlalchemy import text, UUID, Integer, DateTime, Date, Numeric, func
+from sqlalchemy import text, UUID, Integer, DateTime, Date, Numeric
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.config import settings
@@ -47,3 +47,9 @@ class ExchangeRate(Base):
 
     created_at: Mapped[created_at_type]
     modified_at: Mapped[modified_at_type]
+
+    def __repr__(self) -> str:
+        return (
+            f"<ExchangeRate: {self.cur_id} - {self.cur_abbreviation} - {self.cur_scale} - "
+            f"{self.cur_name} - {self.cur_official_rate}>"
+        )
