@@ -1,10 +1,10 @@
 from datetime import date
 
-from sqlalchemy import select, insert
+from sqlalchemy import select, insert, case
 
-from src.converter.api.v1.schemas import ExchangeRateBaseSchema
+from src.converter.api.v1.schemas import ExchangeRateBaseSchema, ExchangeBaseSchema
 from src.repository.database import BaseRepository
-from src.converter.models import ExchangeRate
+from src.converter.models import ExchangeRate, Exchange
 
 
 class ExchangeRateRepository(BaseRepository):
@@ -22,23 +22,35 @@ class ExchangeRateRepository(BaseRepository):
         )
         return list(result.scalars().all())
 
-    async def select_rate_by_cur_abbreviation(
-        self, cur_abbreviation: str
+    async def select_rate_by_cur_abbreviation_and_date(
+        self, cur_abbreviation: str, cur_date: date
     ) -> ExchangeRate:
         result = await self.session.execute(
             select(ExchangeRate).filter(
-                ExchangeRate.cur_abbreviation == cur_abbreviation
+                (ExchangeRate.cur_abbreviation == cur_abbreviation)
+                & (ExchangeRate.cur_date == cur_date)
             )
         )
         return result.scalar_one_or_none()
 
-    async def select_two_rates_by_cur_abbreviations(
-        self, source_cur_abbreviation, target_cur_abbreviation
+    async def select_two_rates_by_cur_abbreviations_and_date(
+        self, source_cur_abbreviation, target_cur_abbreviation, cur_date: date
     ) -> list[ExchangeRate]:
         result = await self.session.execute(
-            select(ExchangeRate).filter(
-                (ExchangeRate.cur_abbreviation == source_cur_abbreviation)
-                | (ExchangeRate.cur_abbreviation == target_cur_abbreviation)
+            select(ExchangeRate)
+            .filter(
+                (
+                    (ExchangeRate.cur_abbreviation == source_cur_abbreviation)
+                    | (ExchangeRate.cur_abbreviation == target_cur_abbreviation)
+                )
+                & (ExchangeRate.cur_date == cur_date)
+            )
+            .order_by(
+                case(
+                    (ExchangeRate.cur_abbreviation == source_cur_abbreviation, 1),
+                    (ExchangeRate.cur_abbreviation == target_cur_abbreviation, 2),
+                    else_=3,
+                )
             )
         )
         return list(result.scalars().all())
@@ -57,3 +69,17 @@ class ExchangeRateRepository(BaseRepository):
 
         await self.session.commit()
         return inserted_rows
+
+
+class ExchangeRepository(BaseRepository):
+    async def insert_new_exchange(self, exchange: ExchangeBaseSchema):
+        if not exchange:
+            return None
+
+        statement = insert(Exchange).values(exchange.model_dump()).returning(Exchange)
+        result = await self.session.execute(statement)
+
+        inserted_exchange = result.scalar_one_or_none()
+
+        await self.session.commit()
+        return inserted_exchange
