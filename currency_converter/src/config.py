@@ -18,6 +18,8 @@ class Settings(BaseSettings):
 
     TIMEZONE: str = Field(description="Timezone used by the application")
 
+    NATIONAL_CURRENCY: str = Field(description="National currency code")
+
     @property
     def database_url(self):
         # db is a name of postgres image in compose.yaml file

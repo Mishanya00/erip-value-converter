@@ -41,7 +41,6 @@ class ExchangeRateRepository(BaseRepository):
                 | (ExchangeRate.cur_abbreviation == target_cur_abbreviation)
             )
         )
-
         return list(result.scalars().all())
 
     async def insert_many_rates(self, rates: list[ExchangeRateBaseSchema]):
@@ -57,5 +56,4 @@ class ExchangeRateRepository(BaseRepository):
         inserted_rows = list(result.scalars().all())
 
         await self.session.commit()
-
         return inserted_rows
