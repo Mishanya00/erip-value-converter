@@ -10,6 +10,10 @@ from src.converter.api.v1.schemas import ExchangeRateBaseSchema
 from src.config import settings
 
 
+class NoDataFetchedException(Exception):
+    pass
+
+
 MINSK_TZ = ZoneInfo(settings.TIMEZONE)
 FETCH_TIME = time(0, 0)
 CUTOFF_TIME = time(23, 0)
@@ -30,14 +34,18 @@ async def fetch_and_store_rates_job():
             async with session_maker() as session:
                 repo = ExchangeRateRepository(session)
 
-                if attempt == 0:
-                    rates_exist = await repo.is_present_by_date(today_minsk)
-                    if rates_exist:
-                        logger.info(f"Rates for {today_minsk} already exist. Job finished.")
-                        return
+                rates_exist = await repo.is_present_by_date(today_minsk)
+                if rates_exist:
+                    logger.info(f"Rates for {today_minsk} already exist. Job finished.")
+                    return
 
-                async with CurrencyRateClient(base_url=settings.EXTERNAL_API_URL) as aclient:
-                    currency_rates = await aclient.get_rates()
+                async with CurrencyRateClient(
+                    base_url=settings.EXTERNAL_API_URL
+                ) as aclient:
+                    currency_rates = await aclient.get_rates_by_date(today_minsk)
+
+                if not currency_rates:
+                    raise NoDataFetchedException
 
                 rates_to_create = [
                     ExchangeRateBaseSchema(
@@ -46,15 +54,18 @@ async def fetch_and_store_rates_job():
                         cur_scale=cr.scale,
                         cur_name=cr.name,
                         cur_official_rate=cr.rate,
-                        cur_date=cr.timestamp.date()
-                    ) for cr in currency_rates
+                        cur_date=cr.timestamp.date(),
+                    )
+                    for cr in currency_rates
                 ]
 
                 await repo.insert_many_rates(rates_to_create)
 
                 await session.commit()
 
-            logger.info(f"Stored {len(rates_to_create)} rates on attempt {attempt + 1}.")
+            logger.info(
+                f"Stored {len(rates_to_create)} rates on attempt {attempt + 1}."
+            )
             return
 
         except Exception as e:
