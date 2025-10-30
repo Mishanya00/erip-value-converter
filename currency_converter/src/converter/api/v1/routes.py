@@ -40,7 +40,7 @@ async def exchange_currency(
     )
 
 
-@converter_router_v1.patch("/exchange_currency/{transaction_uuid}")
+@converter_router_v1.patch("/exchange_currency/{exchange_uuid}")
 async def exchange_currency_confirm(
     exchange_uuid: Annotated[uuid.UUID, Path()],
     action: ExchangeAction,

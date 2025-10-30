@@ -192,7 +192,7 @@ class CurrencyConverterService:
     async def execute_exchange_action(
         self, transaction_uuid: uuid.UUID, action: ExchangeAction
     ) -> ExchangeActionResponseSchema:
-        if not action or action.value not in (
+        if not action or action not in (
             ExchangeAction.CONFIRM,
             ExchangeAction.CANCEL,
         ):
