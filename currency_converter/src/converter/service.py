@@ -165,7 +165,7 @@ class CurrencyConverterService:
 
             target_amount = intermediate_amount * exchange_rate
 
-        inserted_exchange_transaction = self.exchange_repo.insert_new_exchange(
+        inserted_exchange_transaction = await self.exchange_repo.insert_new_exchange(
             ExchangeBaseSchema(
                 source_cur_abbreviation=source_currency,
                 target_cur_abbreviation=target_currency,

@@ -64,7 +64,7 @@ class Exchange(Base):
     target_cur_abbreviation: Mapped[Str3] = mapped_column(nullable=True)
     source_amount: Mapped[Decimal] = mapped_column(Numeric(19, 4), nullable=False)
     target_amount: Mapped[Decimal] = mapped_column(Numeric(19, 4), nullable=False)
-    rate: Mapped[Decimal] = mapped_column(Numeric(19, 28), nullable=False)
+    rate: Mapped[Decimal] = mapped_column(Numeric(47, 28), nullable=False)
     status: Mapped[ExchangeStatus] = mapped_column(nullable=False)
 
     created_at: Mapped[created_at_type]
