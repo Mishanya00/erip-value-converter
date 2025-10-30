@@ -2,9 +2,10 @@ import logging
 import uuid
 from datetime import datetime, date
 from zoneinfo import ZoneInfo
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_EVEN
 
 from tenacity import RetryError
+from babel.numbers import get_currency_precision
 
 from src.converter.api.v1.schemas import (
     ExchangeRateBaseSchema,
@@ -51,6 +52,14 @@ class CurrencyConverterService:
     @property
     def date(self) -> date:
         return datetime.now(self.timezone).date()
+
+    @staticmethod
+    def round_currency(value: Decimal, currency_code: str):
+        precision = get_currency_precision(currency_code)
+        rounded = value.quantize(
+            Decimal("0." + "0" * precision), rounding=ROUND_HALF_EVEN
+        )
+        return rounded
 
     async def get_currency_rates_request(
         self, period: int = 0
@@ -183,8 +192,10 @@ class CurrencyConverterService:
         if not inserted_exchange_transaction:
             raise InternalServerException("Money exchange failed.")
 
+        rounded_target_amount = self.round_currency(target_amount, target_currency)
+
         return ExchangeMoneyResponseSchema(
-            target_cur_amount=target_amount,
+            target_cur_amount=rounded_target_amount,
             exchange_rate=exchange_rate,
             transaction_uuid=inserted_exchange_transaction.id,
         )
