@@ -150,7 +150,7 @@ class CurrencyConverterService:
                 raise CurrencyDoesNotExistError
 
             exchange_rate = (
-                source_currency_info.cur_scale * source_currency_info.cur_official_rate
+                source_currency_info.cur_official_rate / source_currency_info.cur_scale
             )
 
             target_amount = source_amount * exchange_rate
@@ -166,7 +166,7 @@ class CurrencyConverterService:
 
             # sell source currency to buy national one
             intermediate_exchange_rate = (
-                source_currency_info.cur_scale * source_currency_info.cur_official_rate
+                source_currency_info.cur_official_rate / source_currency_info.cur_scale
             )
             intermediate_amount = source_amount * intermediate_exchange_rate
 
