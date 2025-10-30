@@ -1,7 +1,9 @@
+import uuid
 from datetime import date
 
-from sqlalchemy import select, insert, case
+from sqlalchemy import select, insert, case, update
 
+from src.custom_types import ExchangeStatus
 from src.converter.api.v1.schemas import ExchangeRateBaseSchema, ExchangeBaseSchema
 from src.repository.database import BaseRepository
 from src.converter.models import ExchangeRate, Exchange
@@ -83,3 +85,26 @@ class ExchangeRepository(BaseRepository):
 
         await self.session.commit()
         return inserted_exchange
+
+    async def select_exchange_by_id(self, id: uuid.UUID):
+        exchange = await self.session.execute(
+            select(Exchange).filter(Exchange.id == id)
+        )
+        return exchange.scalar_one_or_none()
+
+    async def update_exchange_status(
+        self, exchange_id: uuid.UUID, new_status: ExchangeStatus
+    ) -> Exchange | None:
+        stmt = (
+            update(Exchange)
+            .where(Exchange.id == exchange_id)
+            .values(status=new_status)
+            .returning(Exchange)
+        )
+        try:
+            result = await self.session.execute(stmt)
+            await self.session.commit()
+            return result.scalar_one_or_none()
+        except Exception:
+            await self.session.rollback()
+            raise

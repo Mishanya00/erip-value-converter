@@ -74,3 +74,8 @@ class ExchangeBaseReadSchema(BaseModel):
     modified_at: Annotated[
         datetime, Field(description="Exchange rate modification date")
     ]
+
+
+class ExchangeActionResponseSchema(BaseModel):
+    id: Annotated[uuid.UUID, Field(description="Exchange id")]
+    status: Annotated[ExchangeStatus, Field(description="Exchange transaction status")]

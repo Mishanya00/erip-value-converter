@@ -1,4 +1,5 @@
 import logging
+import uuid
 from datetime import datetime, date
 from zoneinfo import ZoneInfo
 from decimal import Decimal
@@ -9,6 +10,7 @@ from src.converter.api.v1.schemas import (
     ExchangeRateBaseSchema,
     ExchangeBaseSchema,
     ExchangeMoneyResponseSchema,
+    ExchangeActionResponseSchema,
 )
 from src.converter.repositories import ExchangeRateRepository, ExchangeRepository
 from src.converter.exceptions import (
@@ -18,12 +20,14 @@ from src.converter.exceptions import (
     CurrencyDoesNotExistError,
     CurrencyAmountNotSpecifiedError,
     CurrencyAmountInvalidValueError,
+    ExchangeDoesNotExistError,
+    InvalidExchangeAction,
 )
 from src.config import settings
 from src.client.currency_rate_client import CurrencyRateClient
 from src.client.schemas import ExternalAPIExchangeRateSchema
-from src.custom_types import ExchangeStatus
-from src.exceptions import InternalServerException
+from src.custom_types import ExchangeStatus, ExchangeAction
+from src.exceptions import InternalServerException, BaseAppException
 
 
 """
@@ -184,3 +188,36 @@ class CurrencyConverterService:
             exchange_rate=exchange_rate,
             transaction_uuid=inserted_exchange_transaction.id,
         )
+
+    async def execute_exchange_action(
+        self, transaction_uuid: uuid.UUID, action: ExchangeAction
+    ) -> ExchangeActionResponseSchema:
+        if not action or action.value not in (
+            ExchangeAction.CONFIRM,
+            ExchangeAction.CANCEL,
+        ):
+            raise InvalidExchangeAction
+
+        match action:
+            case ExchangeAction.CONFIRM:
+                status = ExchangeStatus.CONFIRMED
+            case ExchangeAction.CANCEL:
+                status = ExchangeStatus.CANCELED
+
+        exchange = await self.exchange_repo.select_exchange_by_id(transaction_uuid)
+
+        if not exchange:
+            raise ExchangeDoesNotExistError
+
+        if exchange.status != ExchangeStatus.PENDING:
+            raise BaseAppException(message="Exchange already handled!", status_code=400)
+
+        result = await self.exchange_repo.update_exchange_status(
+            transaction_uuid, status
+        )
+        if result:
+            return ExchangeActionResponseSchema(
+                id=result.id,
+                status=result.status,
+            )
+        raise InternalServerException("Exchange status update failed!")

@@ -45,3 +45,17 @@ class CurrencyDoesNotExistError(BaseAppException):
 
     def __init__(self, message: str = "Currency does not exist!"):
         super().__init__(message, status.HTTP_404_NOT_FOUND)
+
+
+class ExchangeDoesNotExistError(BaseAppException):
+    """Exception raised when exchange does not exist"""
+
+    def __init__(self, message: str = "Exchange does not exist!"):
+        super().__init__(message, status.HTTP_404_NOT_FOUND)
+
+
+class InvalidExchangeAction(BaseAppException):
+    """Exception raised when exchange action does not exist or invalid"""
+
+    def __init__(self, message: str = "Exchange action does not exist or invalid!"):
+        super().__init__(message, status.HTTP_400_BAD_REQUEST)

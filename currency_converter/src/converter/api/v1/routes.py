@@ -1,7 +1,9 @@
 from typing import Annotated
+import uuid
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Path
 
+from src.custom_types import ExchangeAction
 from src.converter.service import CurrencyConverterService
 from src.converter.api.v1.schemas import ExchangeMoneyRequestSchema
 from src.converter.dependencies import get_currency_converter_service
@@ -35,4 +37,17 @@ async def exchange_currency(
         exchange.source_cur_amount,
         exchange.source_cur_abbreviation,
         exchange.target_cur_abbreviation,
+    )
+
+
+@converter_router_v1.patch("/exchange_currency/{transaction_uuid}")
+async def exchange_currency_confirm(
+    exchange_uuid: Annotated[uuid.UUID, Path()],
+    action: ExchangeAction,
+    currency_converter_service: Annotated[
+        CurrencyConverterService, Depends(get_currency_converter_service)
+    ],
+):
+    return await currency_converter_service.execute_exchange_action(
+        exchange_uuid, action
     )
