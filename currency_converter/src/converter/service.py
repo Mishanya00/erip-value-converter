@@ -250,5 +250,16 @@ class CurrencyConverterService:
             currency.total_received = self.round_currency(
                 currency.total_received, currency.currency_code
             )
-
         return aggregated_data
+
+    async def get_pending_exchanges(self):
+        pending_exchanges = await self.exchange_repo.select_pending_exchanges()
+
+        for exchange in pending_exchanges:
+            exchange.source_amount = self.round_currency(
+                exchange.source_amount, exchange.source_cur_abbreviation
+            )
+            exchange.target_amount = self.round_currency(
+                exchange.target_amount, exchange.target_cur_abbreviation
+            )
+        return pending_exchanges

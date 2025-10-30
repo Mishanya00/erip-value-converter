@@ -53,8 +53,8 @@ class ExchangeBaseSchema(BaseModel):
     target_cur_abbreviation: Annotated[
         str, Field(description="Three letter target currency code")
     ]
-    source_amount: Annotated[Decimal, Field(description="Quote currency amount")]
-    target_amount: Annotated[Decimal, Field(description="Quote currency amount")]
+    source_amount: Annotated[Decimal, Field(description="Source currency amount")]
+    target_amount: Annotated[Decimal, Field(description="Target currency amount")]
     rate: Annotated[
         Decimal,
         Field(
@@ -96,3 +96,21 @@ class AggregatedExchangeDataResponseSchema(BaseModel):
     exchange_count: Annotated[int, Field(description="Number of exchanges")]
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class PendingExchangesResponseSchema(BaseModel):
+    id: Annotated[uuid.UUID, Field(description="Exchange id")]
+    source_cur_abbreviation: Annotated[
+        str, Field(description="Three letter source currency code")
+    ]
+    target_cur_abbreviation: Annotated[
+        str, Field(description="Three letter target currency code")
+    ]
+    source_amount: Annotated[Decimal, Field(description="Source currency amount")]
+    target_amount: Annotated[Decimal, Field(description="Target currency amount")]
+    rate: Annotated[
+        Decimal,
+        Field(
+            description="Amount of target currency that can be bought by 1 source currency unit"
+        ),
+    ]

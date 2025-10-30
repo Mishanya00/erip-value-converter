@@ -207,3 +207,9 @@ class ExchangeRepository(BaseRepository):
             )
 
         return report_data
+
+    async def select_pending_exchanges(self):
+        result = await self.session.execute(
+            select(Exchange).where(Exchange.status == ExchangeStatus.PENDING)
+        )
+        return list(result.scalars().all())

@@ -57,7 +57,7 @@ async def exchange_currency_confirm(
     )
 
 
-@converter_router_v1.get("/get_exchanges")
+@converter_router_v1.get("/exchanges")
 async def get_exchanges(
     exchanges_info: Annotated[AggregatedExchangeDataRequestSchema, Query()],
     currency_converter_service: Annotated[
@@ -67,3 +67,12 @@ async def get_exchanges(
     return await currency_converter_service.get_confirmed_exchanges_by_time_period(
         exchanges_info
     )
+
+
+@converter_router_v1.get("/unfinished_exchanges")
+async def get_unfinished_exchanges(
+    currency_converter_service: Annotated[
+        CurrencyConverterService, Depends(get_currency_converter_service)
+    ],
+):
+    return await currency_converter_service.get_pending_exchanges()
