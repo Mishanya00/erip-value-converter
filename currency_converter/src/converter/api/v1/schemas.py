@@ -79,3 +79,20 @@ class ExchangeBaseReadSchema(BaseModel):
 class ExchangeActionResponseSchema(BaseModel):
     id: Annotated[uuid.UUID, Field(description="Exchange id")]
     status: Annotated[ExchangeStatus, Field(description="Exchange transaction status")]
+
+
+class AggregatedExchangeDataRequestSchema(BaseModel):
+    start_datetime: Annotated[datetime, Field(description="left border of time period")]
+    end_datetime: Annotated[datetime, Field(description="right border of time period")]
+    currency_code: Annotated[
+        str | None, Field(description="Currency code to aggregate exchange data by")
+    ] = None
+
+
+class AggregatedExchangeDataResponseSchema(BaseModel):
+    currency_code: Annotated[str, Field(description="Currency code")]
+    total_received: Annotated[Decimal, Field(description="Total purchased amount")]
+    total_sent: Annotated[Decimal, Field(description="Total sold amount")]
+    exchange_count: Annotated[int, Field(description="Number of exchanges")]
+
+    model_config = ConfigDict(from_attributes=True)

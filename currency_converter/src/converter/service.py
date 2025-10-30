@@ -12,6 +12,7 @@ from src.converter.api.v1.schemas import (
     ExchangeBaseSchema,
     ExchangeMoneyResponseSchema,
     ExchangeActionResponseSchema,
+    AggregatedExchangeDataRequestSchema,
 )
 from src.converter.repositories import ExchangeRateRepository, ExchangeRepository
 from src.converter.exceptions import (
@@ -232,3 +233,22 @@ class CurrencyConverterService:
                 status=result.status,
             )
         raise InternalServerException("Exchange status update failed!")
+
+    async def get_confirmed_exchanges_by_time_period(
+        self, exchanges_info: AggregatedExchangeDataRequestSchema
+    ):
+        aggregated_data = await self.exchange_repo.get_aggregated_exchange_report_by_time_period_and_currency(
+            exchanges_info.start_datetime,
+            exchanges_info.end_datetime,
+            exchanges_info.currency_code,
+        )
+
+        for currency in aggregated_data:
+            currency.total_sent = self.round_currency(
+                currency.total_sent, currency.currency_code
+            )
+            currency.total_received = self.round_currency(
+                currency.total_received, currency.currency_code
+            )
+
+        return aggregated_data

@@ -1,10 +1,24 @@
 import uuid
-from datetime import date
+from datetime import date, datetime
+from decimal import Decimal
 
-from sqlalchemy import select, insert, case, update
+from sqlalchemy import (
+    func,
+    select,
+    insert,
+    case,
+    update,
+    union_all,
+    literal_column,
+    Numeric,
+)
 
 from src.custom_types import ExchangeStatus
-from src.converter.api.v1.schemas import ExchangeRateBaseSchema, ExchangeBaseSchema
+from src.converter.api.v1.schemas import (
+    ExchangeRateBaseSchema,
+    ExchangeBaseSchema,
+    AggregatedExchangeDataResponseSchema,
+)
 from src.repository.database import BaseRepository
 from src.converter.models import ExchangeRate, Exchange
 
@@ -108,3 +122,88 @@ class ExchangeRepository(BaseRepository):
         except Exception:
             await self.session.rollback()
             raise
+
+    async def select_exchanges_by_date_range(
+        self,
+        start_datetime: datetime,
+        end_datetime: datetime,
+        currency_abbreviation: str | None = None,
+    ) -> list[Exchange]:
+        statement = select(Exchange).where(
+            Exchange.created_at.between(start_datetime, end_datetime)
+        )
+
+        if currency_abbreviation:
+            statement = statement.where(
+                (Exchange.source_cur_abbreviation == currency_abbreviation)
+                | (Exchange.target_cur_abbreviation == currency_abbreviation)
+            )
+
+        statement = statement.order_by(Exchange.created_at.asc())
+
+        result = await self.session.execute(statement)
+        return list(result.scalars().all())
+
+    async def get_aggregated_exchange_report_by_time_period_and_currency(
+        self,
+        start_date: datetime,
+        end_date: datetime,
+        currency_abbreviation: str | None = None,
+    ) -> list[AggregatedExchangeDataResponseSchema]:
+        received_currency_query = (
+            select(
+                Exchange.source_cur_abbreviation.label("currency"),
+                Exchange.source_amount.label("amount_in"),
+                literal_column("0").cast(Numeric).label("amount_out"),
+                literal_column("1").label("tx_count"),
+            )
+            .where(Exchange.created_at.between(start_date, end_date))
+            .where(Exchange.status == ExchangeStatus.CONFIRMED)
+        )
+
+        sent_currency_query = (
+            select(
+                Exchange.target_cur_abbreviation.label("currency"),
+                literal_column("0").cast(Numeric).label("amount_in"),
+                Exchange.target_amount.label("amount_out"),
+                literal_column("1").label("tx_count"),
+            )
+            .where(Exchange.created_at.between(start_date, end_date))
+            .where(Exchange.status == ExchangeStatus.CONFIRMED)
+        )
+
+        combined_query = union_all(
+            received_currency_query, sent_currency_query
+        ).subquery()
+
+        final_statement = (
+            select(
+                combined_query.c.currency,
+                func.sum(combined_query.c.amount_in).label("total_received"),
+                func.sum(combined_query.c.amount_out).label("total_sent"),
+                func.count(combined_query.c.tx_count).label("exchange_count"),
+            )
+            .group_by(combined_query.c.currency)
+            .order_by(combined_query.c.currency)
+        )
+
+        if currency_abbreviation:
+            final_statement = final_statement.where(
+                combined_query.c.currency == currency_abbreviation
+            )
+
+        result = await self.session.execute(final_statement)
+
+        # Return using schema because it's a complex query
+        report_data = []
+        for row in result.mappings():
+            report_data.append(
+                AggregatedExchangeDataResponseSchema(
+                    currency_code=row["currency"],
+                    total_received=row["total_received"] or Decimal("0"),
+                    total_sent=row["total_sent"] or Decimal("0"),
+                    exchange_count=row["exchange_count"],
+                )
+            )
+
+        return report_data

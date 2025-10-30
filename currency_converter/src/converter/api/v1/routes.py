@@ -1,11 +1,15 @@
 from typing import Annotated
 import uuid
 
-from fastapi import APIRouter, Depends, Path
+from fastapi import APIRouter, Depends, Path, Query
 
 from src.custom_types import ExchangeAction
 from src.converter.service import CurrencyConverterService
-from src.converter.api.v1.schemas import ExchangeMoneyRequestSchema
+from src.converter.api.v1.schemas import (
+    ExchangeMoneyRequestSchema,
+    AggregatedExchangeDataRequestSchema,
+    AggregatedExchangeDataResponseSchema,
+)
 from src.converter.dependencies import get_currency_converter_service
 
 
@@ -50,4 +54,16 @@ async def exchange_currency_confirm(
 ):
     return await currency_converter_service.execute_exchange_action(
         exchange_uuid, action
+    )
+
+
+@converter_router_v1.get("/get_exchanges")
+async def get_exchanges(
+    exchanges_info: Annotated[AggregatedExchangeDataRequestSchema, Query()],
+    currency_converter_service: Annotated[
+        CurrencyConverterService, Depends(get_currency_converter_service)
+    ],
+) -> list[AggregatedExchangeDataResponseSchema]:
+    return await currency_converter_service.get_confirmed_exchanges_by_time_period(
+        exchanges_info
     )
