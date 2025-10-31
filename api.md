@@ -16,7 +16,7 @@ curl -X GET "http://localhost:8000/converter/v1/"
 **Успешный ответ `200 OK`:**
 ```json
 {
-  "message": "Welcome to the Currency Converter API!"
+  "message": "Currency Converter version 1"
 }
 ```
 
@@ -31,15 +31,20 @@ curl -X GET "http://localhost:8000/converter/v1/today"
 ```
 **Успешный ответ `200 OK`:**
 ```json
-{
-  "date": "2025-10-27",
-  "base": "USD",
-  "rates": {
-    "EUR": 0.95,
-    "RUB": 93.50,
-    "JPY": 150.40
-  }
-}
+[
+  {
+    "cur_id": 440,
+    "cur_scale": 1,
+    "id": "77c59b90-04ad-4175-975d-79f1766d577d",
+    "cur_official_rate": 1.9556,
+    "created_at": "2025-10-30T21:00:00.002492+00:00",
+    "cur_abbreviation": "AUD",
+    "cur_name": "Австралийский доллар",
+    "cur_date": "2025-10-31",
+    "modified_at": "2025-10-30T21:00:00.002492+00:00"
+  },
+  ...
+]
 ```
 
 ---
