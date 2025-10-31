@@ -13,6 +13,7 @@ from src.converter.api.v1.schemas import (
     ExchangeMoneyResponseSchema,
     ExchangeActionResponseSchema,
     AggregatedExchangeDataRequestSchema,
+    PendingExchangesResponseSchema,
 )
 from src.converter.repositories import ExchangeRateRepository, ExchangeRepository
 from src.converter.exceptions import (
@@ -255,6 +256,8 @@ class CurrencyConverterService:
     async def get_pending_exchanges(self):
         pending_exchanges = await self.exchange_repo.select_pending_exchanges()
 
+        pending_exchanges_formatted: list[PendingExchangesResponseSchema] = []
+
         for exchange in pending_exchanges:
             exchange.source_amount = self.round_currency(
                 exchange.source_amount, exchange.source_cur_abbreviation
@@ -262,4 +265,16 @@ class CurrencyConverterService:
             exchange.target_amount = self.round_currency(
                 exchange.target_amount, exchange.target_cur_abbreviation
             )
-        return pending_exchanges
+
+            pending_exchanges_formatted.append(
+                PendingExchangesResponseSchema(
+                    id=exchange.id,
+                    source_amount=exchange.source_amount,
+                    target_amount=exchange.target_amount,
+                    source_cur_abbreviation=exchange.source_cur_abbreviation,
+                    target_cur_abbreviation=exchange.target_cur_abbreviation,
+                    rate=exchange.rate,
+                )
+            )
+
+        return pending_exchanges_formatted
