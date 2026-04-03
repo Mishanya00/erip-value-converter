@@ -1,4 +1,4 @@
-# erip-currency-converter
+# National Bank of the Republic of Belarus value converter 
 
 Сервис обмена валют по курсам Национального Банка Республики Беларусь.
 
